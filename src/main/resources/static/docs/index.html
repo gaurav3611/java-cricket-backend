@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SwingLab API reference</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏏</text></svg>">
+<style>
+  :root {
+    --bg: #f3f5f1; --panel: #ffffff; --soft: #f7f9f6; --ink: #17221c; --muted: #58675e; --line: #dde4dc;
+    --accent: #1c7541; --accent-soft: #e4f2e9; --code: #f0f3ee;
+    --get: #1c7541; --post: #1b5cb3; --put: #96560a; --delete: #b0271f;
+    --ok: #1c7541; --ok-soft: #e4f2e9; --warn: #96560a; --warn-soft: #fbefd9; --err: #b0271f; --err-soft: #fbe6e3;
+    --j-key: #7a3a99; --j-str: #1b5cb3; --j-num: #96560a; --j-lit: #b0271f;
+    --shadow: 0 1px 2px rgba(20, 40, 28, .06), 0 4px 16px rgba(20, 40, 28, .05);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0e1411; --panel: #161e19; --soft: #1b241e; --ink: #e6eee8; --muted: #9aaba0; --line: #2a362e;
+      --accent: #5fd08c; --accent-soft: #1d3327; --code: #101713;
+      --get: #5fd08c; --post: #7fb2f5; --put: #f0b55a; --delete: #f58a80;
+      --ok: #5fd08c; --ok-soft: #1d3327; --warn: #f0b55a; --warn-soft: #3a2d14; --err: #f58a80; --err-soft: #3d1f1c;
+      --j-key: #cf9bea; --j-str: #7fb2f5; --j-num: #f0b55a; --j-lit: #f58a80;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .4);
+    }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  code, pre, .mono, textarea, input.path { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; }
+  a { color: var(--accent); }
+  button { font: inherit; cursor: pointer; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  header.top { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    padding: 10px 20px; background: var(--panel); border-bottom: 1px solid var(--line); }
+  header.top h1 { margin: 0; font-size: 17px; letter-spacing: .01em; }
+  header.top .sub { color: var(--muted); font-size: 13px; }
+  .grow { flex: 1; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; font-size: 12.5px; font-weight: 600;
+    background: var(--soft); color: var(--muted); border: 1px solid var(--line); white-space: nowrap; }
+  .chip.ok { background: var(--ok-soft); color: var(--ok); border-color: transparent; }
+  .chip.warn { background: var(--warn-soft); color: var(--warn); border-color: transparent; }
+  .chip.err { background: var(--err-soft); color: var(--err); border-color: transparent; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+
+  .layout { display: grid; grid-template-columns: 290px minmax(0, 1fr); gap: 24px; max-width: 1280px; margin: 0 auto; padding: 20px; }
+  nav { position: sticky; top: 68px; align-self: start; max-height: calc(100vh - 88px); overflow: auto; padding-right: 4px; }
+  nav input { width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--ink); font: inherit; }
+  nav h2 { margin: 16px 0 6px; font-size: 11.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+  nav a.item { display: flex; align-items: center; gap: 8px; padding: 5px 8px; border-radius: 7px; color: var(--ink); text-decoration: none; }
+  nav a.item:hover { background: var(--accent-soft); }
+  nav a.item .p { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12.5px; }
+
+  .method { display: inline-block; min-width: 54px; text-align: center; padding: 2px 6px; border-radius: 5px; font-size: 11px; font-weight: 700; letter-spacing: .04em; color: #fff; }
+  .method.GET { background: var(--get); } .method.POST { background: var(--post); } .method.PUT { background: var(--put); } .method.DELETE { background: var(--delete); }
+  @media (prefers-color-scheme: dark) { .method { color: #0e1411; } }
+
+  main { min-width: 0; }
+  section.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); padding: 18px 20px; margin-bottom: 18px; scroll-margin-top: 76px; }
+  section.card > h2 { margin: 0 0 6px; font-size: 18px; }
+  h3.group { margin: 28px 0 10px; font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); scroll-margin-top: 76px; }
+  .ep-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .ep-head .path { font-size: 15px; font-weight: 600; word-break: break-all; }
+  .summary { margin: 8px 0 0; }
+  ul.notes { margin: 8px 0 0; padding-left: 20px; color: var(--muted); }
+  h4 { margin: 18px 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
+  p { margin: 8px 0; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  th, td { text-align: left; vertical-align: top; padding: 6px 10px 6px 0; border-top: 1px solid var(--line); }
+  th { font-size: 11.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); border-top: 0; font-weight: 600; }
+  td.type { color: var(--muted); white-space: nowrap; }
+  .tablewrap { overflow-x: auto; }
+
+  pre { margin: 0; padding: 12px 14px; background: var(--code); border: 1px solid var(--line); border-radius: 8px; overflow: auto; max-height: 420px; white-space: pre; }
+  pre .k { color: var(--j-key); } pre .s { color: var(--j-str); } pre .n { color: var(--j-num); } pre .b { color: var(--j-lit); }
+
+  .try { background: var(--soft); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+  .try label { display: block; font-size: 12px; color: var(--muted); margin: 0 0 4px; }
+  .try textarea, .try input.path, #token { width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--ink); }
+  .try textarea { min-height: 120px; resize: vertical; }
+  .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+  .btn { padding: 7px 16px; border-radius: 8px; border: 1px solid transparent; background: var(--accent); color: #fff; font-weight: 600; }
+  @media (prefers-color-scheme: dark) { .btn { color: #0e1411; } }
+  .btn:disabled { opacity: .55; cursor: progress; }
+  .btn.ghost { background: transparent; color: var(--accent); border-color: var(--line); font-weight: 500; }
+  .result { margin-top: 12px; }
+  .result .meta { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; font-size: 13px; color: var(--muted); flex-wrap: wrap; }
+  details.curl { margin-top: 10px; } details.curl summary { cursor: pointer; color: var(--muted); font-size: 13px; }
+  details.curl pre { margin-top: 6px; white-space: pre-wrap; word-break: break-all; }
+
+  .resp { border-top: 1px solid var(--line); padding: 14px 0 4px; }
+  .resp:first-of-type { border-top: 0; padding-top: 0; }
+  .resp .head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+  .resp .when { flex: 1; min-width: 220px; }
+  .status { display: inline-block; min-width: 44px; text-align: center; padding: 2px 8px; border-radius: 6px; font-weight: 700; font-size: 13px; }
+  .status.s2 { background: var(--ok-soft); color: var(--ok); } .status.s4 { background: var(--warn-soft); color: var(--warn); } .status.s5 { background: var(--err-soft); color: var(--err); }
+  .status.s0 { background: var(--err-soft); color: var(--err); }
+  .resp details { margin-top: 8px; } .resp details summary { cursor: pointer; color: var(--muted); font-size: 13px; }
+
+  ol.flow { margin: 12px 0 0; padding: 0; list-style: none; }
+  ol.flow li { border-top: 1px solid var(--line); padding: 10px 0; }
+  ol.flow .line { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
+  .muted { color: var(--muted); }
+  .hidden { display: none !important; }
+  .loadfail { padding: 24px; }
+
+  #navToggle { display: none; margin-top: 8px; }
+  @media (max-width: 900px) {
+    header.top { position: static; }
+    section.card, h3.group { scroll-margin-top: 12px; }
+    .layout { grid-template-columns: 1fr; padding: 12px; gap: 8px; }
+    nav { position: static; max-height: none; }
+    nav .links { display: none; }
+    nav.open .links { display: block; }
+    #navToggle { display: inline-block; }
+    section.card { padding: 14px; }
+  }
+</style>
+</head>
+<body>
+<header class="top">
+  <h1 id="title">SwingLab API</h1>
+  <span class="sub" id="subtitle">REST reference and console</span>
+  <span class="grow"></span>
+  <span class="chip" id="modeChip"><span class="dot"></span><span id="modeText">Checking the API</span></span>
+  <span class="chip" id="countChip">sessions 0 · devices 0</span>
+</header>
+
+<div class="layout">
+  <nav id="nav" aria-label="Endpoints">
+    <input id="filter" type="search" placeholder="Filter endpoints" aria-label="Filter endpoints">
+    <button class="btn ghost" id="navToggle" type="button">Show endpoint list</button>
+    <div class="links" id="navLinks"></div>
+  </nav>
+  <main id="main"><p class="muted loadfail">Loading the endpoint list.</p></main>
+</div>
+
+<script>
+"use strict";
+
+const state = { token: "", demoMode: null, spec: null };
+
+/** Builds an element. Text always goes in through textContent, never as HTML. */
+function el(tag, props, ...kids) {
+  const node = document.createElement(tag);
+  for (const [key, value] of Object.entries(props || {})) {
+    if (value == null || value === false) continue;
+    if (key === "class") node.className = value;
+    else if (key === "text") node.textContent = value;
+    else if (key.startsWith("on")) node.addEventListener(key.slice(2), value);
+    else node.setAttribute(key, value === true ? "" : value);
+  }
+  for (const kid of kids.flat()) if (kid != null) node.append(kid);
+  return node;
+}
+
+/** A <pre> with JSON colouring, built from text nodes and spans. */
+function jsonBlock(value) {
+  const text = typeof value === "string" ? value : JSON.stringify(value, null, 2);
+  const pre = el("pre", { class: "json" });
+  const token = /("(?:\\.|[^"\\])*")(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?/g;
+  let last = 0, m;
+  while ((m = token.exec(text)) !== null) {
+    if (m.index > last) pre.append(text.slice(last, m.index));
+    const cls = m[1] ? (m[2] ? "k" : "s") : (m[3] ? "b" : "n");
+    pre.append(el("span", { class: cls, text: m[1] || m[0] }));
+    if (m[2]) pre.append(m[2]);
+    last = token.lastIndex;
+  }
+  if (last < text.length) pre.append(text.slice(last));
+  return pre;
+}
+
+function statusChip(status) {
+  return el("span", { class: "status s" + String(status).charAt(0), text: String(status) });
+}
+
+function methodBadge(method) {
+  return el("span", { class: "method " + method, text: method });
+}
+
+function fieldTable(fields) {
+  const body = el("tbody");
+  for (const f of fields) {
+    body.append(el("tr", null,
+      el("td", null, el("code", { text: f.name })),
+      el("td", { class: "type", text: f.type || "" }),
+      el("td", { text: f.description || "" })));
+  }
+  return el("div", { class: "tablewrap" }, el("table", null,
+    el("thead", null, el("tr", null, el("th", { text: "Field" }), el("th", { text: "Type" }), el("th", { text: "Meaning" }))),
+    body));
+}
+
+const MODE_LABEL = { demo: "demo mode only", secured: "needs a Firebase key" };
+
+function responseBlock(r) {
+  const head = el("div", { class: "head" }, statusChip(r.status), el("span", { class: "when", text: r.when }));
+  if (MODE_LABEL[r.mode]) head.append(el("span", { class: "chip", text: MODE_LABEL[r.mode] }));
+  const block = el("div", { class: "resp" }, head, jsonBlock(r.body));
+  if (r.fields) block.append(el("details", null, el("summary", { text: "What each field means" }), fieldTable(r.fields)));
+  return block;
+}
+
+/** Sends one request to this API and reports status, time and body. Never throws. */
+async function callApi(method, path, bodyText) {
+  const headers = {};
+  if (state.token) headers["Authorization"] = "Bearer " + state.token;
+  const init = { method, headers };
+  if (bodyText != null && bodyText.trim() !== "" && method !== "GET" && method !== "DELETE") {
+    headers["Content-Type"] = "application/json";
+    init.body = bodyText;
+  }
+  const started = performance.now();
+  try {
+    const response = await fetch(path, init);
+    const text = await response.text();
+    let body = text;
+    try { body = JSON.parse(text); } catch (ignored) { /* not JSON, show as text */ }
+    return { status: response.status, statusText: response.statusText, ms: Math.round(performance.now() - started), body };
+  } catch (error) {
+    return { status: 0, statusText: "No answer", ms: Math.round(performance.now() - started),
+             body: "The request did not reach the API: " + error.message };
+  }
+}
+
+const STATUS_NAMES = { 200: "OK", 302: "Found", 400: "Bad Request", 401: "Unauthorized", 403: "Forbidden", 404: "Not Found",
+  405: "Method Not Allowed", 415: "Unsupported Media Type", 500: "Internal Server Error" };
+
+function resultBlock(result) {
+  const label = result.status === 0 ? "failed" : String(result.status);
+  return el("div", { class: "result" },
+    el("div", { class: "meta" },
+      el("span", { class: "status s" + String(result.status).charAt(0), text: label }),
+      el("span", { text: result.statusText || STATUS_NAMES[result.status] || "" }),
+      el("span", { text: result.ms + " ms" })),
+    jsonBlock(result.body));
+}
+
+function shellQuote(text) { return "'" + text.replace(/'/g, "'\\''") + "'"; }
+
+function curlFor(method, path, bodyText) {
+  const parts = ["curl"];
+  if (method !== "GET") parts.push("-X", method);
+  parts.push(shellQuote(location.origin + path));
+  if (state.token) parts.push("-H", shellQuote("Authorization: Bearer $TOKEN"));
+  if (bodyText && bodyText.trim() !== "" && method !== "GET" && method !== "DELETE") {
+    let compact = bodyText;
+    try { compact = JSON.stringify(JSON.parse(bodyText)); } catch (ignored) { /* keep as typed */ }
+    parts.push("-H", shellQuote("Content-Type: application/json"), "-d", shellQuote(compact));
+  }
+  return parts.join(" ");
+}
+
+function tryPanel(ep) {
+  const hasParam = ep.path.includes("{");
+  const takesBody = ep.method === "POST" || ep.method === "PUT";
+  const defaultBody = ep.try && ep.try.body !== undefined ? JSON.stringify(ep.try.body, null, 2) : "";
+  const pathInput = el("input", { class: "path", type: "text", value: (ep.try && ep.try.path) || ep.path, "aria-label": "Path" });
+  const bodyInput = takesBody && defaultBody ? el("textarea", { spellcheck: "false", "aria-label": "Request body" }) : null;
+  if (bodyInput) bodyInput.value = defaultBody;
+  const out = el("div");
+  const curl = el("pre");
+  const refreshCurl = () => { curl.textContent = curlFor(ep.method, pathInput.value, bodyInput ? bodyInput.value : ""); };
+  const button = el("button", { class: "btn", type: "button", text: "Send", "data-send": ep.id });
+  button.addEventListener("click", async () => {
+    button.disabled = true;
+    const result = await callApi(ep.method, pathInput.value, bodyInput ? bodyInput.value : null);
+    out.replaceChildren(resultBlock(result));
+    button.disabled = false;
+    refreshCurl();
+    refreshHealth();
+  });
+  pathInput.addEventListener("input", refreshCurl);
+  if (bodyInput) bodyInput.addEventListener("input", refreshCurl);
+  refreshCurl();
+
+  const panel = el("div", { class: "try" });
+  if (hasParam) panel.append(el("label", { text: "Path. Replace the id with a real one." }), pathInput);
+  if (bodyInput) panel.append(el("label", { text: "Body, as JSON. Edit it before sending.", style: hasParam ? "margin-top:10px" : null }), bodyInput);
+  panel.append(
+    el("div", { class: "row" }, button,
+      el("span", { class: "muted", text: ep.auth ? "Uses the token from the top of the page, if one is set." : "No sign-in needed." })),
+    out,
+    el("details", { class: "curl" }, el("summary", { text: "Same request with curl" }), curl));
+  return panel;
+}
+
+function endpointCard(ep) {
+  const card = el("section", { class: "card", id: "ep-" + ep.id, "data-search": (ep.method + " " + ep.path + " " + ep.summary).toLowerCase() },
+    el("div", { class: "ep-head" },
+      methodBadge(ep.method),
+      el("code", { class: "path", text: ep.path }),
+      el("span", { class: "chip " + (ep.auth ? "warn" : "ok"), text: ep.auth ? "sign-in required" : "open" })),
+    el("p", { class: "summary", text: ep.summary }));
+  if (ep.notes) card.append(el("ul", { class: "notes" }, ep.notes.map(n => el("li", { text: n }))));
+  if (ep.request) {
+    card.append(el("h4", { text: ep.request.optional ? "Request body (optional)" : "Request body" }), fieldTable(ep.request.fields));
+  }
+  card.append(el("h4", { text: "Try it" }), tryPanel(ep));
+  card.append(el("h4", { text: "Responses (" + ep.responses.length + ")" }), ...ep.responses.map(responseBlock));
+  return card;
+}
+
+function introCard(spec) {
+  const tokenInput = el("input", { id: "token", type: "password", autocomplete: "off", spellcheck: "false",
+    placeholder: "Paste a Firebase ID token here", "aria-label": "Firebase ID token" });
+  tokenInput.addEventListener("input", () => { state.token = tokenInput.value.trim(); });
+  const total = spec.groups.reduce((n, g) => n + g.endpoints.reduce((m, e) => m + e.responses.length, 0), 0) + spec.common.length;
+  const count = spec.groups.reduce((n, g) => n + g.endpoints.length, 0);
+  return el("section", { class: "card", id: "intro" },
+    el("h2", { text: "Every endpoint and every response" }),
+    el("p", { text: "This page lists the " + count + " endpoints of the SwingLab API and the " + total +
+      " responses they can give, with a real example of each. The Send buttons call this running API, so what you see below them is its actual answer." }),
+    el("p", null, "Base address: ", el("code", { text: location.origin })),
+    el("h4", { text: "Sign-in" }),
+    el("p", { id: "modeHelp", class: "muted", text: "Checking which mode the API runs in." }),
+    tokenInput,
+    el("p", { class: "muted", text: "The token is sent as the header Authorization: Bearer <token>. It stays in this page's memory and is gone when you reload. " +
+      "To get one, sign in on the SwingLab site, open the browser console there and run: await firebase.auth().currentUser.getIdToken()" }),
+    el("h4", { text: "See a whole recording" }),
+    el("p", { text: "Runs the calls a recording needs, in order, and shows each answer: start the simulated bat, start a session, wait two seconds, check the device, stop the session." }),
+    el("div", { class: "row" }, el("button", { class: "btn", type: "button", id: "runFlow", text: "Run a demo recording", onclick: runFlow })),
+    el("ol", { class: "flow", id: "flow" }));
+}
+
+function commonCard(spec) {
+  return el("section", { class: "card", id: "common", "data-search": "common errors 401 400 404 405 415 token" },
+    el("h2", { text: "Responses any endpoint can give" }),
+    el("p", { class: "muted", text: "Every error has the same shape: a JSON object with one field, error. Endpoints marked sign-in required answer 401 when a Firebase key is configured and the token is missing or invalid." }),
+    spec.common.map(responseBlock));
+}
+
+function render(spec) {
+  state.spec = spec;
+  document.getElementById("title").textContent = spec.title;
+  document.getElementById("subtitle").textContent = spec.subtitle + " · REST reference and console";
+  const main = document.getElementById("main");
+  const links = document.getElementById("navLinks");
+  main.replaceChildren(introCard(spec));
+  links.replaceChildren(el("a", { class: "item", href: "#intro" }, el("span", { class: "p", text: "Overview and sign-in" })));
+  for (const group of spec.groups) {
+    main.append(el("h3", { class: "group", id: "group-" + group.id, text: group.title }));
+    links.append(el("h2", { text: group.title }));
+    for (const ep of group.endpoints) {
+      main.append(endpointCard(ep));
+      links.append(el("a", { class: "item", href: "#ep-" + ep.id, "data-search": (ep.method + " " + ep.path + " " + ep.summary).toLowerCase() },
+        methodBadge(ep.method), el("span", { class: "p mono", text: ep.path })));
+    }
+  }
+  main.append(el("h3", { class: "group", text: "Common" }), commonCard(spec));
+  links.append(el("h2", { text: "Common" }), el("a", { class: "item", href: "#common" }, el("span", { class: "p", text: "Responses any endpoint can give" })));
+}
+
+async function refreshHealth() {
+  const chip = document.getElementById("modeChip");
+  const text = document.getElementById("modeText");
+  const counts = document.getElementById("countChip");
+  const help = document.getElementById("modeHelp");
+  const result = await callApi("GET", "/api/health", null);
+  if (result.status !== 200 || typeof result.body !== "object") {
+    chip.className = "chip err"; text.textContent = "API not reachable";
+    if (help) help.textContent = "The API did not answer the health check.";
+    return;
+  }
+  state.demoMode = result.body.demo_mode;
+  chip.className = "chip " + (state.demoMode ? "warn" : "ok");
+  text.textContent = state.demoMode ? "Demo mode: sign-in off" : "Firebase connected: sign-in on";
+  counts.textContent = "sessions " + result.body.active_sessions + " · devices " + result.body.live_devices;
+  if (help) help.textContent = state.demoMode
+    ? "The API is in demo mode. No token is needed, every caller is the user demo-user, and nothing is stored. Responses marked \"needs a Firebase key\" cannot be produced right now."
+    : "A Firebase key is configured. Endpoints marked sign-in required need a token. Responses marked \"demo mode only\" cannot be produced right now.";
+}
+
+const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+async function runFlow() {
+  const button = document.getElementById("runFlow");
+  const list = document.getElementById("flow");
+  button.disabled = true;
+  list.replaceChildren();
+  const steps = [
+    { method: "POST", path: "/api/demo/start", note: "Start the simulated bat DEMO_BAT." },
+    { method: "POST", path: "/api/session/start", body: { device_id: "DEMO_BAT" }, note: "Start recording that device." },
+    { wait: 2000, note: "Recording for two seconds." },
+    { method: "GET", path: "/api/esp32/status", note: "The device shows as online." },
+    { method: "POST", path: "/api/session/stop", note: "Stop and get the scores." },
+    { method: "GET", path: "/api/health", note: "No session is running any more." },
+  ];
+  for (const step of steps) {
+    if (step.wait) {
+      const item = el("li", null, el("div", { class: "line" }, el("span", { class: "muted", text: step.note })));
+      list.append(item);
+      await wait(step.wait);
+      continue;
+    }
+    const item = el("li", null, el("div", { class: "line" }, methodBadge(step.method), el("code", { text: step.path }), el("span", { class: "muted", text: step.note })));
+    list.append(item);
+    const result = await callApi(step.method, step.path, step.body ? JSON.stringify(step.body) : null);
+    item.append(resultBlock(result));
+  }
+  list.setAttribute("data-done", "true");
+  button.disabled = false;
+  refreshHealth();
+}
+
+document.getElementById("filter").addEventListener("input", event => {
+  const query = event.target.value.trim().toLowerCase();
+  for (const node of document.querySelectorAll("[data-search]")) {
+    node.classList.toggle("hidden", query !== "" && !node.getAttribute("data-search").includes(query));
+  }
+});
+
+document.getElementById("navToggle").addEventListener("click", event => {
+  const open = document.getElementById("nav").classList.toggle("open");
+  event.target.textContent = open ? "Hide endpoint list" : "Show endpoint list";
+});
+
+(async function start() {
+  try {
+    const response = await fetch("endpoints.json");
+    if (!response.ok) throw new Error("status " + response.status);
+    render(await response.json());
+  } catch (error) {
+    document.getElementById("main").replaceChildren(
+      el("p", { class: "loadfail", text: "The endpoint list could not be loaded (" + error.message + "). Open this page through the API, at /docs, not as a file." }));
+    return;
+  }
+  refreshHealth();
+})();
+</script>
+</body>
+</html>

@@ -21,7 +21,7 @@ You need a Java 21 JDK. Nothing else has to be installed. The `./mvnw` script do
 ./mvnw spring-boot:run
 ```
 
-Then check it:
+Then open `http://localhost:5050/docs` in a browser, or check it from a terminal:
 
 ```bash
 curl http://localhost:5050/api/health
@@ -45,7 +45,7 @@ Things to know:
   ```
 
 - **With no Firebase key it starts in demo mode.** It logs a warning, skips sign-in checks, treats every caller as the user `demo-user` and stores nothing. This is the normal state for local work.
-- **The frontend is optional.** If the Cricket repository is cloned in a folder named `Cricket` next to this one, its `frontend/` folder is served at `/`, so `http://localhost:5050` shows the app. Otherwise only `/api/...` answers. Set `FRONTEND_DIR` to serve a frontend from somewhere else.
+- **The frontend is optional.** If the Cricket repository is cloned in a folder named `Cricket` next to this one, its `frontend/` folder is served at `/`, so `http://localhost:5050` shows the app. Otherwise `/` leads to the API reference page. Set `FRONTEND_DIR` to serve a frontend from somewhere else.
 - **Start it from the repository root.** The `.env` file and a relative `FRONTEND_DIR` are resolved from the directory you start in.
 
 ## Configuration
@@ -62,6 +62,8 @@ Set these as environment variables, or as `KEY=VALUE` lines in a `.env` file in 
 With neither key variable pointing at a key, the API runs in demo mode. A key that is present but unreadable stops the application from starting, so a broken key can never silently switch sign-in checks off.
 
 ## Endpoints
+
+The page at `/docs` shows each of these with every response it can give. See [API reference page](#api-reference-page).
 
 | Method and path | Sign-in | Purpose |
 |---|---|---|
@@ -92,6 +94,18 @@ curl -X POST localhost:5050/api/session/stop
 
 Firestore layout: the collection `sessions` holds one document per stopped session, keyed by the session id, with the owner's Firebase uid in the field `uid`. The collection `users` holds profile fields, keyed by uid.
 
+## API reference page
+
+Open `http://localhost:5050/docs` while the API runs.
+
+- **Every endpoint and every response.** The page lists the 11 endpoints and the 34 responses they can give: each status code, when it happens, a real example, and what the fields mean.
+- **Send buttons.** Each endpoint has a form that calls the running API and shows its actual answer, with the status and the time taken. The body can be edited first.
+- **A whole recording in one click.** "Run a demo recording" starts the simulated bat, records for two seconds, and shows the answer of every call on the way.
+- **Sign-in.** In demo mode nothing is needed. With a Firebase key configured, paste an ID token at the top and the page sends it with each call.
+- **The same request as `curl`**, under each form.
+
+The page is one self-contained file with no outside scripts, so it works offline and wherever the API runs. It reads its content from [endpoints.json](src/main/resources/static/docs/endpoints.json). Two tests keep that file truthful: one compares its endpoint list with the controllers, in both directions, and the others replay every documented response against the API and compare.
+
 ## Tests and the Flask contract
 
 The Flask backend had no tests, so its behavior was recorded and the recording is the contract.
@@ -99,6 +113,7 @@ The Flask backend had no tests, so its behavior was recorded and the recording i
 - **The recording.** [golden.json](src/test/resources/parity/golden.json) holds 454 requests and the answers the Flask backend gave in demo mode. They cover every endpoint, malformed input, fifteen recording sessions with several built to sit exactly on each scoring threshold, CORS, `Accept` headers and static files.
 - **`ParityTest`** replays those requests against this API over real HTTP and compares status codes and JSON bodies. Numbers must agree to within 0.000000001. Session ids and timestamps are compared by type only.
 - **`SecuredModeTest`** covers what the recording cannot, because Flask in demo mode skips it: token checks on every protected route, owner-only read and delete, what is read from and written to storage, and storage failures. Firebase is replaced by stand-ins.
+- **`ApiDocsTest` and `ApiDocsSecuredTest`** keep the API reference page truthful, as described above.
 - **`FirebaseWiringTest` and `FirebaseContextTest`** start the real Firebase SDK with a key generated on the spot. They show that a key switches demo mode off, that the real verifier rejects bad tokens, and that a broken key stops startup.
 - **`SensorMathTest` and `PyMathTest`** pin the formulas and the rounding to values computed in Python.
 
@@ -169,6 +184,8 @@ src/main/java/com/swinglab/api/
 ├── session/    recording, the end-of-session scores, stored history
 └── util/       Python-compatible rounding and timestamps
 src/main/resources/application.properties
+src/main/resources/static/docs/      the API reference page and endpoints.json, its content
+src/main/resources/static/index.html sends / to /docs when no frontend is configured
 src/test/java/...                    the tests named above
 src/test/resources/parity/           generate_golden.py and golden.json
 src/test/resources/frontend-fixture/ three small files that stand in for a frontend in ParityTest

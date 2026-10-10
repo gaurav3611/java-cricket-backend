@@ -6,6 +6,7 @@ import org.springframework.http.MediaType;
 import org.springframework.web.servlet.config.annotation.ContentNegotiationConfigurer;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
@@ -30,6 +31,13 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void configureContentNegotiation(ContentNegotiationConfigurer configurer) {
         configurer.ignoreAcceptHeader(true).defaultContentType(MediaType.APPLICATION_JSON);
+    }
+
+    /** The API reference page lives at /docs/index.html. /docs is the address to remember. */
+    @Override
+    public void addViewControllers(ViewControllerRegistry registry) {
+        registry.addRedirectViewController("/docs", "/docs/index.html");
+        registry.addRedirectViewController("/docs/", "/docs/index.html");
     }
 
     /** Any origin may call /api/**, without credentials. Same policy as the Flask app's CORS setup. */

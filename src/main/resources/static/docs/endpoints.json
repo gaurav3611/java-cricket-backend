@@ -1,0 +1,571 @@
+{
+  "title": "SwingLab API",
+  "subtitle": "Java Cricket Backend",
+  "volatile_keys": ["session_id", "started_at", "ended_at", "duration_seconds", "last_seen", "updated_at"],
+  "groups": [
+    {
+      "id": "status",
+      "title": "Status",
+      "endpoints": [
+        {
+          "id": "health",
+          "method": "GET",
+          "path": "/api/health",
+          "auth": false,
+          "summary": "Check that the API is running and see which mode it is in.",
+          "try": {"path": "/api/health"},
+          "responses": [
+            {
+              "status": 200,
+              "when": "Always.",
+              "mode": "any",
+              "body": {"status": "healthy", "demo_mode": true, "connected_clients": 0, "active_sessions": 0, "live_devices": 0},
+              "fields": [
+                {"name": "status", "type": "text", "description": "Always \"healthy\"."},
+                {"name": "demo_mode", "type": "true or false", "description": "True when no Firebase key is configured. Sign-in is then off and nothing is stored."},
+                {"name": "connected_clients", "type": "number", "description": "Always 0. Kept from the Flask API, where it counted Socket.IO connections."},
+                {"name": "active_sessions", "type": "number", "description": "Recordings in progress right now."},
+                {"name": "live_devices", "type": "number", "description": "Devices that have sent at least one reading since the API started."}
+              ],
+              "verify": {"in": "demo", "ignore_values": ["active_sessions", "live_devices"]}
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sensor",
+      "title": "Bat sensor",
+      "endpoints": [
+        {
+          "id": "sensor-data",
+          "method": "POST",
+          "path": "/api/sensor-data",
+          "auth": false,
+          "summary": "Send one reading from the bat sensor.",
+          "notes": [
+            "The reading is added to every running session that listens to this device_id.",
+            "The body is read as JSON whatever the Content-Type header says.",
+            "Numbers may also be sent as text, for example \"1.5\"."
+          ],
+          "request": {
+            "example": {"device_id": "DOCS_BAT", "ax": 0.4, "ay": 1.1, "az": 0.2, "gx": -250, "gy": 900, "gz": 40, "ts": 1760000000000},
+            "fields": [
+              {"name": "device_id", "type": "text", "description": "Name of the bat sensor. Defaults to \"unknown\"."},
+              {"name": "ax, ay, az", "type": "number", "description": "Acceleration on each axis, in g. A missing value counts as 0."},
+              {"name": "gx, gy, gz", "type": "number", "description": "Rotation speed around each axis, in degrees per second. A missing value counts as 0."},
+              {"name": "ts", "type": "number", "description": "The sensor's own clock. Accepted and ignored."}
+            ]
+          },
+          "try": {"path": "/api/sensor-data", "body": {"device_id": "DOCS_BAT", "ax": 0.4, "ay": 1.1, "az": 0.2, "gx": -250, "gy": 900, "gz": 40, "ts": 1760000000000}},
+          "responses": [
+            {
+              "status": 200,
+              "when": "The reading was accepted.",
+              "mode": "any",
+              "body": {"status": "ok"},
+              "verify": {"in": "demo"}
+            },
+            {
+              "status": 400,
+              "when": "The body is an empty JSON value: {}, [], \"\", 0, false or null.",
+              "mode": "any",
+              "body": {"error": "No data received"},
+              "verify": {"in": "demo", "request": {"body": {}}}
+            },
+            {
+              "status": 500,
+              "when": "The body is missing, is not valid JSON, is not a JSON object, or a value is not a number. The error text names the problem and varies.",
+              "mode": "any",
+              "body": {"error": "For input string: \"abc\""},
+              "verify": {"in": "demo", "request": {"body": {"device_id": "DOCS_BAT", "ax": "abc"}}}
+            }
+          ]
+        },
+        {
+          "id": "device-status",
+          "method": "GET",
+          "path": "/api/esp32/status",
+          "auth": false,
+          "summary": "List the devices that have sent readings, and how recently.",
+          "notes": ["Devices are listed in the order they were first seen. The list is kept in memory and is empty after a restart."],
+          "try": {"path": "/api/esp32/status"},
+          "responses": [
+            {
+              "status": 200,
+              "when": "Always. The list is empty until a device has sent a reading.",
+              "mode": "any",
+              "body": {"devices": [{"device_id": "DOCS_BAT", "last_seen": 0.84, "online": true}], "count": 1},
+              "fields": [
+                {"name": "devices[].device_id", "type": "text", "description": "Name the device sent."},
+                {"name": "devices[].last_seen", "type": "number", "description": "Seconds since the device's latest reading."},
+                {"name": "devices[].online", "type": "true or false", "description": "True when the latest reading is less than 5 seconds old."},
+                {"name": "count", "type": "number", "description": "Number of devices in the list."}
+              ],
+              "verify": {
+                "in": "demo",
+                "setup": [{"method": "POST", "path": "/api/sensor-data", "body": {"device_id": "DOCS_BAT", "gy": 900}}]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "recording",
+      "title": "Recording a session",
+      "endpoints": [
+        {
+          "id": "session-start",
+          "method": "POST",
+          "path": "/api/session/start",
+          "auth": true,
+          "summary": "Start recording readings from one device.",
+          "notes": [
+            "Each user has at most one running session. Starting again discards the running one without storing it.",
+            "The session collects only readings whose device_id matches."
+          ],
+          "request": {
+            "optional": true,
+            "example": {"device_id": "DOCS_BAT"},
+            "fields": [
+              {"name": "device_id", "type": "text", "description": "Device to record. Defaults to \"CRICPRO_BAT_001\"."}
+            ]
+          },
+          "try": {"path": "/api/session/start", "body": {"device_id": "DOCS_BAT"}},
+          "responses": [
+            {
+              "status": 200,
+              "when": "The session started.",
+              "mode": "any",
+              "body": {"status": "started", "session_id": "67fd183d"},
+              "fields": [
+                {"name": "status", "type": "text", "description": "Always \"started\"."},
+                {"name": "session_id", "type": "text", "description": "New 8-character id for this session."}
+              ],
+              "verify": {"in": "demo"}
+            }
+          ]
+        },
+        {
+          "id": "session-stop",
+          "method": "POST",
+          "path": "/api/session/stop",
+          "auth": true,
+          "summary": "Stop the caller's session and get its scores.",
+          "notes": [
+            "No request body.",
+            "With a Firebase key configured, the analytics are also stored in Firestore as sessions/{session_id}. If storing fails, the scores are still returned."
+          ],
+          "try": {"path": "/api/session/stop"},
+          "responses": [
+            {
+              "status": 200,
+              "when": "The session recorded at least one reading.",
+              "mode": "any",
+              "body": {
+                "status": "stopped",
+                "analytics": {
+                  "session_id": "67fd183d",
+                  "uid": "demo-user",
+                  "device_id": "DOCS_BAT",
+                  "started_at": "2026-10-10T11:02:49.358892+00:00",
+                  "ended_at": "2026-10-10T11:03:01.399255+00:00",
+                  "duration_seconds": 12,
+                  "total_readings": 5,
+                  "swing_count": 1,
+                  "peak_speed_kmh": 36.7,
+                  "avg_speed_kmh": 17.3,
+                  "peak_power_watts": 336.8,
+                  "avg_power_watts": 113.8,
+                  "peak_accel_g": 2.81,
+                  "timing_score": 68,
+                  "control_score": 87,
+                  "sweet_spot_pct": 100,
+                  "follow_through_pct": 75,
+                  "overall_score": 73
+                }
+              },
+              "fields": [
+                {"name": "analytics.session_id", "type": "text", "description": "Id of the session."},
+                {"name": "analytics.uid", "type": "text", "description": "Firebase uid of the owner. \"demo-user\" in demo mode."},
+                {"name": "analytics.device_id", "type": "text", "description": "Device that was recorded."},
+                {"name": "analytics.started_at, ended_at", "type": "text", "description": "Start and stop time in UTC."},
+                {"name": "analytics.duration_seconds", "type": "number", "description": "Whole seconds between start and stop."},
+                {"name": "analytics.total_readings", "type": "number", "description": "Readings recorded."},
+                {"name": "analytics.swing_count", "type": "number", "description": "Times the speed rose above 25 km/h straight after a reading below 15 km/h."},
+                {"name": "analytics.peak_speed_kmh", "type": "number", "description": "Highest bat speed. Capped at 160."},
+                {"name": "analytics.avg_speed_kmh", "type": "number", "description": "Average bat speed over all readings."},
+                {"name": "analytics.peak_power_watts, avg_power_watts", "type": "number", "description": "Highest and average estimated power."},
+                {"name": "analytics.peak_accel_g", "type": "number", "description": "Highest acceleration, in g."},
+                {"name": "analytics.timing_score", "type": "0 to 100", "description": "Higher when the speed is steadier across readings above 20 km/h. 50 when fewer than two readings are that fast."},
+                {"name": "analytics.control_score", "type": "0 to 100", "description": "Higher when rotation around the z axis varies less. 50 for a single reading."},
+                {"name": "analytics.sweet_spot_pct", "type": "number", "description": "Readings above 2.5 g and 20 km/h, divided by the swing count, times 100. Not capped at 100."},
+                {"name": "analytics.follow_through_pct", "type": "0 to 100", "description": "Speed kept in the readings after the peak. 75 when the session has 10 readings or fewer."},
+                {"name": "analytics.overall_score", "type": "0 to 100", "description": "Timing 30%, control 25%, peak speed 25%, sweet spot 20%."}
+              ],
+              "verify": {
+                "in": "demo",
+                "setup": [
+                  {"method": "POST", "path": "/api/session/start", "body": {"device_id": "DOCS_BAT"}},
+                  {"method": "POST", "path": "/api/sensor-data", "body": {"device_id": "DOCS_BAT", "ax": 0.02, "ay": 1.0, "az": 0.05, "gx": 2, "gy": 4, "gz": 0.5}},
+                  {"method": "POST", "path": "/api/sensor-data", "body": {"device_id": "DOCS_BAT", "ax": 0.9, "ay": 1.2, "az": 0.3, "gx": -160, "gy": 820, "gz": 2.5}},
+                  {"method": "POST", "path": "/api/sensor-data", "body": {"device_id": "DOCS_BAT", "ax": 1.7, "ay": 2.2, "az": 0.4, "gx": -210, "gy": 1040, "gz": 4}},
+                  {"method": "POST", "path": "/api/sensor-data", "body": {"device_id": "DOCS_BAT", "ax": 0.6, "ay": 1.1, "az": 0.2, "gx": -120, "gy": 600, "gz": 1.5}},
+                  {"method": "POST", "path": "/api/sensor-data", "body": {"device_id": "DOCS_BAT", "ax": 0.05, "ay": 1.0, "az": 0.02, "gx": 3, "gy": 5, "gz": 0.5}}
+                ]
+              }
+            },
+            {
+              "status": 200,
+              "when": "The session received no readings from its device. Nothing is stored.",
+              "mode": "any",
+              "body": {"status": "stopped", "session_id": "25ae77be", "analytics": null, "message": "No data recorded"},
+              "verify": {
+                "in": "demo",
+                "setup": [{"method": "POST", "path": "/api/session/start", "body": {"device_id": "DOCS_SILENT"}}]
+              }
+            },
+            {
+              "status": 400,
+              "when": "The caller has no running session.",
+              "mode": "any",
+              "body": {"error": "No active session"},
+              "verify": {"in": "demo", "setup": [{"method": "POST", "path": "/api/session/stop"}]}
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "history",
+      "title": "Stored sessions",
+      "endpoints": [
+        {
+          "id": "sessions-list",
+          "method": "GET",
+          "path": "/api/sessions",
+          "auth": true,
+          "summary": "List the caller's stored sessions, newest first.",
+          "notes": ["Returns at most 50 sessions.", "Sessions are stored only when a Firebase key is configured."],
+          "try": {"path": "/api/sessions"},
+          "responses": [
+            {
+              "status": 200,
+              "when": "Sessions were read from Firestore. The list is empty when the user has none.",
+              "mode": "secured",
+              "body": {
+                "sessions": [
+                  {
+                    "session_id": "67fd183d", "uid": "Xy12AbCdEfGh3456IjKlMnOpQr78", "device_id": "CRICPRO_BAT_001",
+                    "started_at": "2026-10-10T11:02:49.358892+00:00", "ended_at": "2026-10-10T11:14:51.399255+00:00",
+                    "duration_seconds": 722, "total_readings": 1840, "swing_count": 24,
+                    "peak_speed_kmh": 88.5, "avg_speed_kmh": 21.4, "peak_power_watts": 1310.2, "avg_power_watts": 164.9,
+                    "peak_accel_g": 6.12, "timing_score": 72, "control_score": 64, "sweet_spot_pct": 58,
+                    "follow_through_pct": 81, "overall_score": 74
+                  }
+                ]
+              },
+              "verify": {"in": "secured", "case": "owner", "uid": "Xy12AbCdEfGh3456IjKlMnOpQr78"}
+            },
+            {
+              "status": 200,
+              "when": "Demo mode. The list is always empty.",
+              "mode": "demo",
+              "body": {"sessions": []},
+              "verify": {"in": "demo"}
+            },
+            {
+              "status": 200,
+              "when": "Firestore could not be read, for example because the query's index is missing. The status stays 200 and the reason is in error.",
+              "mode": "secured",
+              "body": {"sessions": [], "error": "FAILED_PRECONDITION: The query requires an index."},
+              "verify": {"in": "secured", "case": "storage_failure"}
+            }
+          ]
+        },
+        {
+          "id": "session-get",
+          "method": "GET",
+          "path": "/api/session/{id}",
+          "auth": true,
+          "summary": "Get one stored session.",
+          "notes": ["{id} is the 8-character session id.", "Only the session's owner may read it."],
+          "try": {"path": "/api/session/67fd183d"},
+          "responses": [
+            {
+              "status": 200,
+              "when": "The session exists and belongs to the caller. The body is the stored analytics.",
+              "mode": "secured",
+              "body": {
+                "session_id": "67fd183d", "uid": "Xy12AbCdEfGh3456IjKlMnOpQr78", "device_id": "CRICPRO_BAT_001",
+                "started_at": "2026-10-10T11:02:49.358892+00:00", "ended_at": "2026-10-10T11:14:51.399255+00:00",
+                "duration_seconds": 722, "total_readings": 1840, "swing_count": 24,
+                "peak_speed_kmh": 88.5, "avg_speed_kmh": 21.4, "peak_power_watts": 1310.2, "avg_power_watts": 164.9,
+                "peak_accel_g": 6.12, "timing_score": 72, "control_score": 64, "sweet_spot_pct": 58,
+                "follow_through_pct": 81, "overall_score": 74
+              },
+              "verify": {"in": "secured", "case": "owner", "uid": "Xy12AbCdEfGh3456IjKlMnOpQr78"}
+            },
+            {
+              "status": 403,
+              "when": "The session belongs to another user.",
+              "mode": "secured",
+              "body": {"error": "Unauthorized"},
+              "verify": {"in": "secured", "case": "not_owner"}
+            },
+            {
+              "status": 404,
+              "when": "No session has this id.",
+              "mode": "secured",
+              "body": {"error": "Session not found"},
+              "verify": {"in": "secured", "case": "not_found"}
+            },
+            {
+              "status": 404,
+              "when": "Demo mode. Nothing is stored, so there is nothing to read.",
+              "mode": "demo",
+              "body": {"error": "Not available in demo mode"},
+              "verify": {"in": "demo"}
+            },
+            {
+              "status": 500,
+              "when": "Firestore could not be read. The error text varies.",
+              "mode": "secured",
+              "body": {"error": "UNAVAILABLE: io exception"},
+              "verify": {"in": "secured", "case": "storage_failure"}
+            }
+          ]
+        },
+        {
+          "id": "session-delete",
+          "method": "DELETE",
+          "path": "/api/session/{id}",
+          "auth": true,
+          "summary": "Delete one stored session.",
+          "notes": ["Only the session's owner may delete it."],
+          "try": {"path": "/api/session/67fd183d"},
+          "responses": [
+            {
+              "status": 200,
+              "when": "The session existed, belonged to the caller, and is now deleted.",
+              "mode": "secured",
+              "body": {"status": "deleted"},
+              "verify": {"in": "secured", "case": "owner"}
+            },
+            {
+              "status": 404,
+              "when": "No session has this id, or it belongs to another user. The two cases are not told apart.",
+              "mode": "secured",
+              "body": {"error": "Not found or unauthorized"},
+              "verify": {"in": "secured", "cases": ["not_found", "not_owner"]}
+            },
+            {
+              "status": 404,
+              "when": "Demo mode.",
+              "mode": "demo",
+              "body": {"error": "Not available in demo mode"},
+              "verify": {"in": "demo"}
+            },
+            {
+              "status": 500,
+              "when": "Firestore failed. The error text varies.",
+              "mode": "secured",
+              "body": {"error": "UNAVAILABLE: io exception"},
+              "verify": {"in": "secured", "case": "storage_failure"}
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "profile",
+      "title": "Profile",
+      "endpoints": [
+        {
+          "id": "profile-get",
+          "method": "GET",
+          "path": "/api/profile",
+          "auth": true,
+          "summary": "Get the caller's account details and overall stats.",
+          "notes": [
+            "The stats are added up from the caller's stored sessions each time.",
+            "If the stored sessions cannot be read, the stats are all 0 and the status is still 200."
+          ],
+          "try": {"path": "/api/profile"},
+          "responses": [
+            {
+              "status": 200,
+              "when": "The caller is signed in and the account was found.",
+              "mode": "secured",
+              "body": {
+                "uid": "Xy12AbCdEfGh3456IjKlMnOpQr78",
+                "email": "asha@example.org",
+                "display_name": "Asha",
+                "photo_url": "https://example.org/asha.png",
+                "created_at": 1760094169000,
+                "stats": {"total_sessions": 2, "total_swings": 38, "best_score": 74, "avg_speed": 20.2}
+              },
+              "fields": [
+                {"name": "uid", "type": "text", "description": "Firebase uid."},
+                {"name": "email, display_name, photo_url", "type": "text or null", "description": "From the Firebase account. null when the account has none."},
+                {"name": "created_at", "type": "number", "description": "When the account was created, in milliseconds since 1970."},
+                {"name": "stats.total_sessions", "type": "number", "description": "Stored sessions."},
+                {"name": "stats.total_swings", "type": "number", "description": "Sum of swing_count over those sessions."},
+                {"name": "stats.best_score", "type": "number", "description": "Highest overall_score."},
+                {"name": "stats.avg_speed", "type": "number", "description": "Average of the sessions' avg_speed_kmh, to one decimal."}
+              ],
+              "verify": {
+                "in": "secured", "case": "owner", "uid": "Xy12AbCdEfGh3456IjKlMnOpQr78",
+                "fixtures": {
+                  "sessions": [
+                    {"swing_count": 24, "overall_score": 74, "avg_speed_kmh": 21.4},
+                    {"swing_count": 14, "overall_score": 61, "avg_speed_kmh": 19.0}
+                  ]
+                }
+              }
+            },
+            {
+              "status": 200,
+              "when": "The caller is signed in but the account lookup failed. Only the stats are returned.",
+              "mode": "secured",
+              "body": {"stats": {"total_sessions": 2, "total_swings": 38, "best_score": 74, "avg_speed": 20.2}},
+              "verify": {
+                "in": "secured", "case": "stats_only",
+                "fixtures": {
+                  "sessions": [
+                    {"swing_count": 24, "overall_score": 74, "avg_speed_kmh": 21.4},
+                    {"swing_count": 14, "overall_score": 61, "avg_speed_kmh": 19.0}
+                  ]
+                }
+              }
+            },
+            {
+              "status": 200,
+              "when": "Demo mode. A fixed demo profile.",
+              "mode": "demo",
+              "body": {"uid": "demo-user", "email": "demo@cricpro.com", "display_name": "Demo User", "stats": {"total_sessions": 0, "total_swings": 0, "best_score": 0, "avg_speed": 0.0}},
+              "verify": {"in": "demo"}
+            }
+          ]
+        },
+        {
+          "id": "profile-update",
+          "method": "PUT",
+          "path": "/api/profile",
+          "auth": true,
+          "summary": "Update the caller's profile.",
+          "notes": [
+            "The fields are merged into the Firestore document users/{uid}, together with uid and updated_at.",
+            "Fields other than the three below are ignored."
+          ],
+          "request": {
+            "optional": true,
+            "example": {"display_name": "Asha", "team": "Blue", "batting_style": "left"},
+            "fields": [
+              {"name": "display_name", "type": "text", "description": "Defaults to an empty text."},
+              {"name": "team", "type": "text", "description": "Defaults to an empty text."},
+              {"name": "batting_style", "type": "text", "description": "Defaults to \"right\"."}
+            ]
+          },
+          "try": {"path": "/api/profile", "body": {"display_name": "Asha", "team": "Blue", "batting_style": "left"}},
+          "responses": [
+            {
+              "status": 200,
+              "when": "The profile was stored.",
+              "mode": "secured",
+              "body": {"status": "updated"},
+              "verify": {"in": "secured", "case": "owner"}
+            },
+            {
+              "status": 200,
+              "when": "Demo mode. Nothing is stored.",
+              "mode": "demo",
+              "body": {"status": "ok"},
+              "verify": {"in": "demo"}
+            },
+            {
+              "status": 500,
+              "when": "Firestore could not be written. The error text varies.",
+              "mode": "secured",
+              "body": {"error": "UNAVAILABLE: io exception"},
+              "verify": {"in": "secured", "case": "storage_failure"}
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "demo",
+      "title": "Demo",
+      "endpoints": [
+        {
+          "id": "demo-start",
+          "method": "POST",
+          "path": "/api/demo/start",
+          "auth": false,
+          "summary": "Start simulated readings, to try the API without a bat.",
+          "notes": [
+            "Readings arrive for the device DEMO_BAT 50 times a second until the API is stopped.",
+            "Calling it again changes nothing.",
+            "The simulated swing is very slow, so a session recorded from it shows speeds near zero."
+          ],
+          "try": {"path": "/api/demo/start"},
+          "responses": [
+            {
+              "status": 200,
+              "when": "Always.",
+              "mode": "any",
+              "body": {"status": "demo_started", "device_id": "DEMO_BAT"},
+              "verify": {"in": "demo"}
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "common": [
+    {
+      "status": 401,
+      "when": "A sign-in endpoint was called without the header Authorization: Bearer <token>.",
+      "mode": "secured",
+      "body": {"error": "Missing authorization token"},
+      "verify": {"in": "secured", "case": "missing_token"}
+    },
+    {
+      "status": 401,
+      "when": "A sign-in endpoint was called with a token that Firebase rejects: malformed, expired, or from another project.",
+      "mode": "secured",
+      "body": {"error": "Invalid or expired token"},
+      "verify": {"in": "secured", "case": "invalid_token"}
+    },
+    {
+      "status": 400,
+      "when": "The JSON body of start session or update profile could not be parsed.",
+      "mode": "any",
+      "body": {"error": "Failed to read request"},
+      "verify": {"in": "demo", "request": {"method": "POST", "path": "/api/session/start", "raw": "{bad", "headers": {"Content-Type": "application/json"}}}
+    },
+    {
+      "status": 415,
+      "when": "Start session or update profile got a body whose Content-Type is not JSON.",
+      "mode": "any",
+      "body": {"error": "Content-Type 'text/plain;charset=UTF-8' is not supported"},
+      "verify": {"in": "demo", "request": {"method": "POST", "path": "/api/session/start", "raw": "hello", "headers": {"Content-Type": "text/plain;charset=UTF-8"}}}
+    },
+    {
+      "status": 404,
+      "when": "The path does not exist.",
+      "mode": "any",
+      "body": {"error": "No static resource api/nope for request '/api/nope'."},
+      "verify": {"in": "demo", "request": {"method": "GET", "path": "/api/nope"}}
+    },
+    {
+      "status": 405,
+      "when": "The path exists but not with this method.",
+      "mode": "any",
+      "body": {"error": "Request method 'POST' is not supported"},
+      "verify": {"in": "demo", "request": {"method": "POST", "path": "/api/health"}}
+    }
+  ]
+}
