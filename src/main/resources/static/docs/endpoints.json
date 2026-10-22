@@ -129,7 +129,7 @@
             "optional": true,
             "example": {"device_id": "DOCS_BAT"},
             "fields": [
-              {"name": "device_id", "type": "text", "description": "Device to record. Defaults to \"CRICPRO_BAT_001\"."}
+              {"name": "device_id", "type": "text", "description": "Device to record. Defaults to \"SSWINGG_BAT_001\"."}
             ]
           },
           "try": {"path": "/api/session/start", "body": {"device_id": "DOCS_BAT"}},
@@ -257,7 +257,7 @@
               "body": {
                 "sessions": [
                   {
-                    "session_id": "67fd183d", "uid": "Xy12AbCdEfGh3456IjKlMnOpQr78", "device_id": "CRICPRO_BAT_001",
+                    "session_id": "67fd183d", "uid": "Xy12AbCdEfGh3456IjKlMnOpQr78", "device_id": "SSWINGG_BAT_001",
                     "started_at": "2026-10-10T11:02:49.358892+00:00", "ended_at": "2026-10-10T11:14:51.399255+00:00",
                     "duration_seconds": 722, "total_readings": 1840, "swing_count": 24,
                     "peak_speed_kmh": 88.5, "avg_speed_kmh": 21.4, "peak_power_watts": 1310.2, "avg_power_watts": 164.9,
@@ -298,7 +298,7 @@
               "when": "The session exists and belongs to the caller. The body is the stored analytics.",
               "mode": "secured",
               "body": {
-                "session_id": "67fd183d", "uid": "Xy12AbCdEfGh3456IjKlMnOpQr78", "device_id": "CRICPRO_BAT_001",
+                "session_id": "67fd183d", "uid": "Xy12AbCdEfGh3456IjKlMnOpQr78", "device_id": "SSWINGG_BAT_001",
                 "started_at": "2026-10-10T11:02:49.358892+00:00", "ended_at": "2026-10-10T11:14:51.399255+00:00",
                 "duration_seconds": 722, "total_readings": 1840, "swing_count": 24,
                 "peak_speed_kmh": 88.5, "avg_speed_kmh": 21.4, "peak_power_watts": 1310.2, "avg_power_watts": 164.9,
@@ -444,7 +444,7 @@
               "status": 200,
               "when": "Demo mode. A fixed demo profile.",
               "mode": "demo",
-              "body": {"uid": "demo-user", "email": "demo@cricpro.com", "display_name": "Demo User", "stats": {"total_sessions": 0, "total_swings": 0, "best_score": 0, "avg_speed": 0.0}},
+              "body": {"uid": "demo-user", "email": "demo@sswingg.com", "display_name": "Demo User", "stats": {"total_sessions": 0, "total_swings": 0, "best_score": 0, "avg_speed": 0.0}},
               "verify": {"in": "demo"}
             }
           ]

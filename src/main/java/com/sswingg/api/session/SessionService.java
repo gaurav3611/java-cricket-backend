@@ -27,7 +27,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class SessionService {
 
-    public static final String DEFAULT_DEVICE_ID = "CRICPRO_BAT_001";
+    public static final String DEFAULT_DEVICE_ID = "SSWINGG_BAT_001";
 
     private static final Logger log = LoggerFactory.getLogger(SessionService.class);
     private static final int HISTORY_LIMIT = 50;
