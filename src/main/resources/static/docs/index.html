@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SwingLab API reference</title>
+<title>SSwinGG API reference</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏏</text></svg>">
 <style>
   :root {
@@ -121,7 +121,7 @@
 </head>
 <body>
 <header class="top">
-  <h1 id="title">SwingLab API</h1>
+  <h1 id="title">SSwinGG API</h1>
   <span class="sub" id="subtitle">REST reference and console</span>
   <span class="grow"></span>
   <span class="chip" id="modeChip"><span class="dot"></span><span id="modeText">Checking the API</span></span>
@@ -312,14 +312,14 @@ function introCard(spec) {
   const count = spec.groups.reduce((n, g) => n + g.endpoints.length, 0);
   return el("section", { class: "card", id: "intro" },
     el("h2", { text: "Every endpoint and every response" }),
-    el("p", { text: "This page lists the " + count + " endpoints of the SwingLab API and the " + total +
+    el("p", { text: "This page lists the " + count + " endpoints of the SSwinGG API and the " + total +
       " responses they can give, with a real example of each. The Send buttons call this running API, so what you see below them is its actual answer." }),
     el("p", null, "Base address: ", el("code", { text: location.origin })),
     el("h4", { text: "Sign-in" }),
     el("p", { id: "modeHelp", class: "muted", text: "Checking which mode the API runs in." }),
     tokenInput,
     el("p", { class: "muted", text: "The token is sent as the header Authorization: Bearer <token>. It stays in this page's memory and is gone when you reload. " +
-      "To get one, sign in on the SwingLab site, open the browser console there and run: await firebase.auth().currentUser.getIdToken()" }),
+      "To get one, sign in on the SSwinGG site, open the browser console there and run: await firebase.auth().currentUser.getIdToken()" }),
     el("h4", { text: "See a whole recording" }),
     el("p", { text: "Runs the calls a recording needs, in order, and shows each answer: start the simulated bat, start a session, wait two seconds, check the device, stop the session." }),
     el("div", { class: "row" }, el("button", { class: "btn", type: "button", id: "runFlow", text: "Run a demo recording", onclick: runFlow })),

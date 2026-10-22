@@ -1,5 +1,5 @@
 {
-  "title": "SwingLab API",
+  "title": "SSwinGG API",
   "subtitle": "Java Cricket Backend",
   "volatile_keys": ["session_id", "started_at", "ended_at", "duration_seconds", "last_seen", "updated_at"],
   "groups": [

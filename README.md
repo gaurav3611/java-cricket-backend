@@ -1,6 +1,6 @@
 # Java Cricket Backend
 
-The REST API for SwingLab, a cricket bat swing analytics app, written in Java with Spring Boot.
+The REST API for SSwinGG, a cricket bat swing analytics app, written in Java with Spring Boot.
 
 It is a rewrite of the Flask backend in the [Cricket](https://github.com/gaurav3611/Cricket) repository (`backend/app.py` at commit `bc4ea4b`). It has the same paths, methods, JSON field names and status codes, and its answers are tested against a recording of the Flask backend's answers.
 
@@ -31,8 +31,8 @@ Other commands:
 
 ```bash
 ./mvnw test                                           # run the tests
-./mvnw package                                        # build target/swinglab-api-0.0.1-SNAPSHOT.jar
-java -jar target/swinglab-api-0.0.1-SNAPSHOT.jar      # run the built jar
+./mvnw package                                        # build target/sswingg-api-0.0.1-SNAPSHOT.jar
+java -jar target/sswingg-api-0.0.1-SNAPSHOT.jar      # run the built jar
 PORT=5051 ./mvnw spring-boot:run                      # use another port
 ```
 
@@ -172,7 +172,7 @@ The Cricket repository also has a smaller Vercel function, `api/index.py`, that 
 ## Code layout
 
 ```
-src/main/java/com/swinglab/api/
+src/main/java/com/sswingg/api/
 ├── auth/       @RequireAuth, the interceptor that checks tokens, TokenVerifier
 ├── config/     CORS, JSON-only answers, interceptor registration
 ├── demo/       POST /api/demo/start and the simulator

@@ -8,11 +8,11 @@
 		<version>4.1.1</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.swinglab</groupId>
-	<artifactId>swinglab-api</artifactId>
+	<groupId>com.sswingg</groupId>
+	<artifactId>sswingg-api</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>swinglab-api</name>
-	<description>SwingLab REST API - Spring Boot port of the Flask backend</description>
+	<name>sswingg-api</name>
+	<description>SSwinGG REST API - Spring Boot port of the Flask backend</description>
 	<url/>
 	<licenses>
 		<license/>

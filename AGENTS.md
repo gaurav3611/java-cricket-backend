@@ -4,7 +4,7 @@ Guidance for AI coding agents working in this repository. Humans should start wi
 
 ## What this is
 
-The REST API for SwingLab, a cricket bat swing analytics app. It is written in Java 21 with Spring Boot 4.1 and built with Maven.
+The REST API for SSwinGG, a cricket bat swing analytics app. It is written in Java 21 with Spring Boot 4.1 and built with Maven.
 
 It is a rewrite of the Flask backend in the [Cricket](https://github.com/gaurav3611/Cricket) repository, `backend/app.py` at commit `bc4ea4b`. It must keep giving the same answers as that backend. Most of the rules below exist to protect that.
 
@@ -31,18 +31,18 @@ Run all of these from the repository root, with `JAVA_HOME` set as above.
 ./mvnw test                          # the whole suite, a few seconds once libraries are downloaded
 ./mvnw test -Dtest=ParityTest        # one test class
 ./mvnw spring-boot:run               # start on http://localhost:5050
-./mvnw package                       # build target/swinglab-api-0.0.1-SNAPSHOT.jar
+./mvnw package                       # build target/sswingg-api-0.0.1-SNAPSHOT.jar
 PORT=5051 ./mvnw spring-boot:run     # another port
 ```
 
-- `./mvnw spring-boot:run` works without a terminal attached, so it is safe to start as a background job. Stop it with `pkill -f com.swinglab.api.SwinglabApiApplication`.
+- `./mvnw spring-boot:run` works without a terminal attached, so it is safe to start as a background job. Stop it with `pkill -f com.sswingg.api.SswinggApiApplication`.
 - With no Firebase key the API starts in demo mode and logs a warning. That is the normal local state, not an error.
 - Check a running instance with `curl http://localhost:5050/api/health`, or open `http://localhost:5050/docs`.
 - Start it from the repository root. The `.env` file and a relative `FRONTEND_DIR` are resolved from the start directory.
 
 ## Code map
 
-Everything is under `src/main/java/com/swinglab/api/`.
+Everything is under `src/main/java/com/sswingg/api/`.
 
 | Package | Holds |
 |---|---|
@@ -140,7 +140,7 @@ Do not assume any of these exist:
 - A Dockerfile or any deployment. Vercel, where the Python API runs, has no Java runtime.
 - A run against a real Firebase project, or a check that the Firestore index for the session list exists.
 - The Socket.IO live push of the Flask backend. This API is REST only.
-- A browser test of the SwingLab frontend against this API.
+- A browser test of the SSwinGG frontend against this API.
 
 ## Keeping this file current
 
