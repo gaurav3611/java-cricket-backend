@@ -39,7 +39,7 @@ public class ProfileService {
         Map<String, Object> profile = new LinkedHashMap<>();
         if (firebase.isDemoMode()) {
             profile.put("uid", AuthInterceptor.DEMO_UID);
-            profile.put("email", "demo@cricpro.com");
+            profile.put("email", "demo@sswingg.com");
             profile.put("display_name", "Demo User");
             profile.put("stats", stats(0, 0, 0, 0));
             return profile;

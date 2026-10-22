@@ -347,11 +347,11 @@ class SecuredModeTest {
     void startingWithoutABodyUsesTheDefaultDevice() {
         // Flask answered 415 here. This API accepts the request, see README.md.
         assertEquals(200, http.send("POST", "/api/session/start", as("u-default"), null).statusCode());
-        http.postJson("/api/sensor-data", Map.of(), "{\"device_id\":\"CRICPRO_BAT_001\",\"gy\":900}");
+        http.postJson("/api/sensor-data", Map.of(), "{\"device_id\":\"SSWINGG_BAT_001\",\"gy\":900}");
 
         Map<String, Object> analytics = (Map<String, Object>) TestHttp.parseObject(
                 http.send("POST", "/api/session/stop", as("u-default"), null)).get("analytics");
-        assertEquals("CRICPRO_BAT_001", analytics.get("device_id"));
+        assertEquals("SSWINGG_BAT_001", analytics.get("device_id"));
         assertEquals(1, analytics.get("total_readings"));
     }
 }
